@@ -4,7 +4,7 @@ Address::Address(std::basic_string<char> ip, std::basic_string<char> port) {
   initialize_Address(ip, port);
 }
 
-//represent_address[read_index] should come from to_string
+//represent_address[read_index] should come from as_string
 Address::Address(std::basic_string<char> represent_address) {
   std::basic_string<char> ip;
   std::basic_string<char> port;
@@ -51,12 +51,13 @@ bool Address::operator<(const Address &other) const {
   return compare_val;
 }
 
-std::basic_string<char> Address::to_string() {
+std::basic_string<char> Address::as_string() const {
   std::basic_string<char> represent_address = ip + IP_PORT_SEP + port;
 
   return represent_address;
 }
 
+/*
 std::set<Address> Address::addresses_from_string(std::basic_string<char> represent_addresses) {
 
   std::set<Address> addresses;
@@ -81,7 +82,7 @@ std::set<Address> Address::addresses_from_string(std::basic_string<char> represe
   
   return addresses;
 }
-
+*/
 
 
 
@@ -99,10 +100,10 @@ int main(int argc, char* argv[]) {
   Address empty_empty("", "");
   Address basic("hello", "goodbye");
   
-  std::basic_string<char> empty_port_str = empty_port.to_string();
-  std::basic_string<char> empty_ip_str = empty_port.to_string();
-  std::basic_string<char> empty_empty_str = empty_empty.to_string();
-  std::basic_string<char> basic_str = basic.to_string();
+  std::basic_string<char> empty_port_str = empty_port.as_string();
+  std::basic_string<char> empty_ip_str = empty_ip.as_string();
+  std::basic_string<char> empty_empty_str = empty_empty.as_string();
+  std::basic_string<char> basic_str = basic.as_string();
 
   
   Address empty_port2 = Address(empty_port_str);
