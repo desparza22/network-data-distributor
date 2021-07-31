@@ -1,6 +1,18 @@
 #ifndef SOCKET_AGENT_HPP
 #define SOCKET_AGENT_HPP
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+#include <unistd.h>
+#include <errno.h>
+#include <iostream>
+#include <string>
+
+
 class SocketAgent;
 struct SocketReturn;
 
@@ -13,6 +25,8 @@ struct SocketReturn;
 #define CLOSE_ERROR (1<<6)
 #define GETADDRINFO_ERROR (1<<7)
 #define SOCKET_ERROR (1<<8)
+#define BIND_ERROR (1<<9)
+#define LISTEN_ERROR (1<<10)
 
 class SocketAgent {
 
@@ -22,34 +36,41 @@ private:
 public:
   SocketAgent();
 
-  void print_error_info_helper(const char* func_name, int errno);
+  void print_error_info_helper(const char* func_name, int error);
   
   void print_error_info(struct SocketReturn return_info);
 
   
-  struct SocketReturn open_server(std::basic_string<char> IP,
-				  std::basic_string<char> port, bool exit_on_error);
-  struct SocketReturn accept(int& set_to_descriptor, bool exit_on_error);
+  struct SocketReturn agent_open_server(std::basic_string<char> IP,
+				  std::basic_string<char> port,
+				  int queue_size,
+				  bool exit_on_error);
+  struct SocketReturn agent_accept(int& set_to_descriptor, bool exit_on_error);
   
-  struct SocketReturn connect(std::basic_string<char> IP,
+  struct SocketReturn agent_connect(std::basic_string<char> IP,
 			      std::basic_string<char> port,
 			      int& socket_descriptor, bool exit_on_error);
-  struct SocketReturn send(std::basic_string<char> message, int socket_descriptor, bool exit_on_error);
-  struct SocketReturn receive(std::basic_string<char>& buffer, int max_size,
+  struct SocketReturn agent_send(std::basic_string<char> message, int socket_descriptor, bool exit_on_error);
+  struct SocketReturn agent_receive(std::basic_string<char>& buffer, int max_size,
 			      int socket_descriptor, bool exit_on_error);
-  struct SocketReturn close_connection(int socket_descriptor, bool exit_on_error);
+  struct SocketReturn agent_close_connection(int socket_descriptor, bool exit_on_error);
 
   struct SocketReturn call_getaddrinfo(std::basic_string<char> IP,
 				       std::basic_string<char> port,
 				       struct addrinfo& results,
 				       bool exit_on_error);
-  struct SocketReturn call_socket(const struct addrinfo results,
+  struct SocketReturn call_socket(const struct addrinfo& results,
+				  bool exit_on_error);
+  struct SocketReturn call_bind(int socket_descriptor,
+				const struct addrinfo& results,
+				bool exit_on_error);
+  struct SocketReturn call_listen(int socket_descriptor, int queue_size,
 				  bool exit_on_error);
   struct SocketReturn call_connect(int socket_descriptor,
 				   const struct addrinfo results,
 				   bool exit_on_error);
   struct SocketReturn call_send(int socket_descriptor, char* message,
-				int bytes);
+				int bytes, bool exit_on_error);
 
   struct SocketReturn call_recv(int socket_descriptor, char buffer[],
 				int max_bytes, bool exit_on_error);
@@ -60,9 +81,9 @@ public:
 };
 
 struct SocketReturn {
-  char flags;
+  int flags;
   int return_val;
-  int errno;
+  int error;
 };
 
 #endif
