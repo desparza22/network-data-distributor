@@ -112,9 +112,11 @@ int main(int argc, char* argv[]) {
   //Test < operator on StringWrapper
   if(!(*hello_wrapper < *world_wrapper)) {
     std::cout << "hello_wrapper should be < world_wrapper\n";
+    exit(1);
   }
   if(!(*empty_wrapper < *hello_wrapper)) {
     std::cout << "empty_wrapper should be < hello_wrapper\n";
+    exit(1);
   }
   //
 
@@ -145,10 +147,12 @@ int main(int argc, char* argv[]) {
     std::cout << "vectors are not equal\n";
     std::cout << "vector_a prints as " << ObjStrIterator::vector_to_string(vector_a) << "\n";
     std::cout << "vector_b prints as " << ObjStrIterator::vector_to_string(vector_b) << "\n";
+    exit(1);
   }
   //
   
-  
+
+  std::cout << "Tests passed!\n";
   return 0;
 }
 

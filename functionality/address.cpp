@@ -57,34 +57,6 @@ std::basic_string<char> Address::as_string() const {
   return represent_address;
 }
 
-/*
-std::set<Address> Address::addresses_from_string(std::basic_string<char> represent_addresses) {
-
-  std::set<Address> addresses;
-  bool addresses_left = true;
-  do {
-    std::basic_string<char> next_address_str;
-    int next_sep = represent_addresses.find(ADDRESS_SEP);
-
-    if(next_sep != std::basic_string::npos) {
-      next_address_str = represent_addresses.substr(0, next_sep);
-      represent_addresses = represent_addresses.substr(next_sep+1);
-
-    } else {
-      next_address_str = represet_addresses;
-      addresses_left = false;
-    }
-
-    Address address(next_address_str);
-    addresses.insert(address);
-
-  } while(addresses_left);
-  
-  return addresses;
-}
-*/
-
-
 
 #ifdef TEST_ADDRESS
 
@@ -114,18 +86,22 @@ int main(int argc, char* argv[]) {
   std::basic_string<char> conversion_error = "failed conversion to/from string";
   if(!check_equality(empty_port, empty_port2)) {
     std::cout << "empty_port " << conversion_error << "\n";
+    exit(1);
   }
   if(!check_equality(empty_ip, empty_ip2)) {
     std::cout << "empty_ip " << conversion_error << "\n";
+    exit(1);
   }
   if(!check_equality(empty_empty, empty_empty2)) {
     std::cout << "empty_empty " << conversion_error << "\n";
+    exit(1);
   }
   if(!check_equality(basic, basic2)) {
     std::cout << "basic " << conversion_error << "\n";
+    exit(1);
   }
     
-  
+  std::cout << "Tests passed!\n";
   return 0;
 }
 
