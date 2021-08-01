@@ -3,13 +3,14 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <iostream>
 
 class ThreadBlocker {
 private:
   bool thread_should_continue;
   
-  std::mutex* mutex_;
-  std::condition_variable* cond_var;
+  std::mutex mutex_;
+  std::condition_variable cond_var;
 
 public:
   ThreadBlocker();
