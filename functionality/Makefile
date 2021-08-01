@@ -4,7 +4,7 @@ test_socket_agent = -D TEST_SOCKET_AGENT=1
 test_thread_blocker = -D TEST_THREAD_BLOCKER=1
 
 SOURCE = ./
-FLAGS = -std=c++17
+FLAGS = -std=c++17 -g
 
 address_test:
 	g++ -I$(SOURCE) $(FLAGS) $(test_address) -o address address.cpp
