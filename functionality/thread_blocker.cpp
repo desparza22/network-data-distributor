@@ -3,19 +3,14 @@
 
 ThreadBlocker::ThreadBlocker() {
   thread_should_continue = false;
-}
-
-ThreadBlocker::ThreadBlocker(const ThreadBlocker &older) {
-  thread_should_continue = older.thread_should_continue;
-}
-
-ThreadBlocker::~ThreadBlocker() {
+  mutex_ptr = std::shared_ptr<std::mutex>(new std::mutex());
+  cond_var_ptr = std::shared_ptr<std::condition_variable>(new std::condition_variable());
 }
 
 void ThreadBlocker::block_this() {
-  std::unique_lock<std::mutex> ul(mutex_);
+  std::unique_lock<std::mutex> ul(*mutex_ptr);
 
-  cond_var.wait(ul, [=]{return thread_should_continue;});
+  cond_var_ptr->wait(ul, [=]{return thread_should_continue;});
   thread_should_continue = false;
   
   ul.unlock();
@@ -23,11 +18,11 @@ void ThreadBlocker::block_this() {
 
 void ThreadBlocker::unblock_other() {
   {
-    std::lock_guard<std::mutex> lg(mutex_);
+    std::lock_guard<std::mutex> lg(*mutex_ptr);
     thread_should_continue = true;
   }
 
-  cond_var.notify_one();
+  cond_var_ptr->notify_one();
 }
 
 

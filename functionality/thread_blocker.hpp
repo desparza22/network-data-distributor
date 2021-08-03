@@ -9,13 +9,11 @@ class ThreadBlocker {
 private:
   bool thread_should_continue;
   
-  std::mutex mutex_;
-  std::condition_variable cond_var;
+  std::shared_ptr<std::mutex> mutex_ptr;
+  std::shared_ptr<std::condition_variable> cond_var_ptr;
 
 public:
   ThreadBlocker();
-  ThreadBlocker(const ThreadBlocker &older);
-  ~ThreadBlocker();
   
   void block_this();
   void unblock_other();
