@@ -2,6 +2,7 @@
 #define SEMAPHORE_HPP
 
 #include <deque>
+#include <mutex>
 
 #include "thread_blocker.hpp"
 
@@ -20,9 +21,12 @@ struct WaitingThreadEntry create_entry(int resources_needed);
 
 class Semaphore {
 private:
-  std::deque<struct WaitingThreadEntry> waiting_threads;
-  int resources;
+  std::shared_ptr<std::mutex> mutex_ptr;
   
+  std::shared_ptr<std::deque<struct WaitingThreadEntry>> waiting_threads;
+  std::shared_ptr<int> resources;
+  
+  bool attempt_unblock();
   void add_back(struct WaitingThreadEntry thread_entry);
   struct WaitingThreadEntry peek_front();
   void remove_front();

@@ -7,7 +7,7 @@
 
 class ThreadBlocker {
 private:
-  bool thread_should_continue;
+  std::shared_ptr<bool> thread_should_continue;
   
   std::shared_ptr<std::mutex> mutex_ptr;
   std::shared_ptr<std::condition_variable> cond_var_ptr;

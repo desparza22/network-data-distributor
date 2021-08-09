@@ -2,7 +2,7 @@
 
 
 ThreadBlocker::ThreadBlocker() {
-  thread_should_continue = false;
+  thread_should_continue = std::shared_ptr<bool>(new bool(false));
   mutex_ptr = std::shared_ptr<std::mutex>(new std::mutex());
   cond_var_ptr = std::shared_ptr<std::condition_variable>(new std::condition_variable());
 }
@@ -10,8 +10,8 @@ ThreadBlocker::ThreadBlocker() {
 void ThreadBlocker::block_this() {
   std::unique_lock<std::mutex> ul(*mutex_ptr);
 
-  cond_var_ptr->wait(ul, [=]{return thread_should_continue;});
-  thread_should_continue = false;
+  cond_var_ptr->wait(ul, [=]{return *thread_should_continue;});
+  *thread_should_continue = false;
   
   ul.unlock();
 }
@@ -19,7 +19,7 @@ void ThreadBlocker::block_this() {
 void ThreadBlocker::unblock_other() {
   {
     std::lock_guard<std::mutex> lg(*mutex_ptr);
-    thread_should_continue = true;
+    *thread_should_continue = true;
   }
 
   cond_var_ptr->notify_one();

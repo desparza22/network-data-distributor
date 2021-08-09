@@ -395,6 +395,38 @@ struct SocketReturn SocketAgent::call_close(int socket_descriptor,
 
 #ifdef TEST_SOCKET_AGENT
 
+void send_and_receive(Semaphore coordinate_this,
+		      Semaphore coordinate_main,
+		      std::basic_string<char> ip,
+		      std::basic_string<char> port,
+		      std::basic_string<char> other_ip,
+		      std::basic_string<char> other_port,
+		      std::basic_string<char> sending,
+		      std::basic_string<char> receiving,
+		      std::shared_ptr<bool> success) {
+
+  SocketAgent socket_agent;
+  struct SocketReturn socket_return;
+  
+  int queue_size = 1;
+  bool exit_on_error = true;
+  socket_return = socket_agent.agent_open_server(ip,
+						 port,
+						 queue_size,
+						 exit_on_error);
+  int socket_descriptor = socket_return.return_val;
+  
+  coordinate_main.give(1);
+  coordinate_this.acquire(1);
+
+  //create threads for connecting and accepting, with pointers to
+  //variables that will store things like socket_descriptors
+
+  //send and receive messages, comparing the received message to expected
+  //update success to reflect whether messages matched
+  
+  //close connection
+}
 
 int main(int argc, char* argv[]) {
 
@@ -405,25 +437,7 @@ int main(int argc, char* argv[]) {
   std::basic_string<char> server1_port("2000");
   std::basic_string<char> server2_port("2001");
 
-  int shared_var1 = 1;
-  int shared_var2 = 2;
   
-  int fork_ret = fork();
-  if(fork_ret == -1) {
-    std::cout << "Error with fork. errno: " << errno << '\n';
-    exit(1);
-  }
-
-  if(fork_ret) { //parent
-    struct SocketReturn return_info = agent_open_server(server1_ip, server1_port, true);
-    
-    
-    
-  } else { //child
-    struct SocketReturn return_info = agent_open_server(server2_ip, server2_port, true);
-    
-    
-  }
   
 
   return 0;

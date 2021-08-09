@@ -13,6 +13,8 @@
 #include <string>
 
 
+#include "semaphore.hpp"
+
 class SocketAgent;
 struct SocketReturn;
 
