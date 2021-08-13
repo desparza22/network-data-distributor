@@ -14,7 +14,7 @@ obj_str_iterator_test:
 	g++ -I$(SOURCE) $(FLAGS) $(test_obj_str_iterator) -o obj_str_iterator obj_str_iterator.cpp
 
 socket_agent_test:
-	g++ -I$(SOURCE) $(FLAGS) $(test_socket_agent) -o socket_agent socket_agent.cpp semaphore.cpp
+	g++ -I$(SOURCE) $(FLAGS) $(test_socket_agent) -o socket_agent socket_agent.cpp semaphore.cpp thread_blocker.cpp
 
 thread_blocker_test:
 	g++ -I$(SOURCE) $(FLAGS) $(test_thread_blocker) -o thread_blocker thread_blocker.cpp

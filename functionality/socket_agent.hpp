@@ -33,28 +33,35 @@ struct SocketReturn;
 class SocketAgent {
 
 private:
-  struct addrinfo hints;
+  void print_error_info_helper(const char* func_name, int error);
+  
   
 public:
   SocketAgent();
 
-  void print_error_info_helper(const char* func_name, int error);
   
   void print_error_info(struct SocketReturn return_info);
 
   
   struct SocketReturn agent_open_server(std::basic_string<char> IP,
-				  std::basic_string<char> port,
-				  int queue_size,
-				  bool exit_on_error);
-  struct SocketReturn agent_accept(int& set_to_descriptor, bool exit_on_error);
+					std::basic_string<char> port,
+					int& set_to_descriptor,
+					int queue_size,
+					bool exit_on_error);
+  struct SocketReturn agent_accept(int socket_descriptor,
+				   int& set_to_descriptor,
+				   bool exit_on_error);
   
   struct SocketReturn agent_connect(std::basic_string<char> IP,
 			      std::basic_string<char> port,
 			      int& socket_descriptor, bool exit_on_error);
-  struct SocketReturn agent_send(std::basic_string<char> message, int socket_descriptor, bool exit_on_error);
-  struct SocketReturn agent_receive(std::basic_string<char>& buffer, int max_size,
-			      int socket_descriptor, bool exit_on_error);
+  struct SocketReturn agent_send(std::basic_string<char> message,
+				 int socket_descriptor,
+				 bool exit_on_error);
+  struct SocketReturn agent_receive(std::basic_string<char>& buffer,
+				    int max_size,
+				    int socket_descriptor,
+				    bool exit_on_error);
   struct SocketReturn agent_close_connection(int socket_descriptor, bool exit_on_error);
 
   struct SocketReturn call_getaddrinfo(std::basic_string<char> IP,
@@ -68,14 +75,21 @@ public:
 				bool exit_on_error);
   struct SocketReturn call_listen(int socket_descriptor, int queue_size,
 				  bool exit_on_error);
+  struct SocketReturn call_accept(int socket_descriptor,
+				  int& set_to_descriptor,
+				  struct sockaddr& incoming,
+				  socklen_t& incoming_size,
+				  bool exit_on_error);
   struct SocketReturn call_connect(int socket_descriptor,
 				   const struct addrinfo results,
 				   bool exit_on_error);
   struct SocketReturn call_send(int socket_descriptor, char* message,
 				int bytes, bool exit_on_error);
 
-  struct SocketReturn call_recv(int socket_descriptor, char buffer[],
-				int max_bytes, bool exit_on_error);
+  struct SocketReturn call_recv(int socket_descriptor,
+				char buffer[],
+				int max_bytes,
+				bool exit_on_error);
   
   struct SocketReturn call_close(int socket_descriptor,
 				 bool exit_on_error);
