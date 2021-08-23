@@ -4,9 +4,10 @@ test_socket_agent = -D TEST_SOCKET_AGENT=1
 test_thread_blocker = -D TEST_THREAD_BLOCKER=1
 test_semaphore = -D TEST_SEMAPHORE=1
 test_object_pool = -D TEST_OBJECT_POOL=1
+test_socket_communicator = -D TEST_SOCKET_COMMUNICATOR=1
 
 SOURCE = ./
-FLAGS = -std=c++17 -g
+FLAGS = -std=c++20 -g
 
 address_test:
 	g++ -I$(SOURCE) $(FLAGS) $(test_address) -o address address.cpp
@@ -26,5 +27,8 @@ semaphore_test:
 object_pool_test:
 	g++ -I$(SOURCE) $(FLAGS) $(test_object_pool) -o object_pool object_pool.cpp semaphore.cpp thread_blocker.cpp
 
+socket_communicator_test:
+	g++ -I$(SOURCE) $(FLAGS) $(test_socket_communicator) -o socket_communicator socket_communicator.cpp communicator.cpp socket_agent.cpp object_pool.cpp semaphore.cpp thread_blocker.cpp address.cpp
+
 clean:
-	rm address obj_str_iterator socket_agent thread_blocker semaphore *~ *.o
+	rm address obj_str_iterator socket_agent thread_blocker semaphore object_pool socket_communicator *~ *.o
