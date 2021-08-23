@@ -3,6 +3,7 @@ test_obj_str_iterator = -D TEST_OBJ_STR_ITERATOR=1
 test_socket_agent = -D TEST_SOCKET_AGENT=1
 test_thread_blocker = -D TEST_THREAD_BLOCKER=1
 test_semaphore = -D TEST_SEMAPHORE=1
+test_object_pool = -D TEST_OBJECT_POOL=1
 
 SOURCE = ./
 FLAGS = -std=c++17 -g
@@ -22,6 +23,8 @@ thread_blocker_test:
 semaphore_test:
 	g++ -I$(SOURCE) $(FLAGS) $(test_semaphore) -o semaphore semaphore.cpp thread_blocker.cpp
 
+object_pool_test:
+	g++ -I$(SOURCE) $(FLAGS) $(test_object_pool) -o object_pool object_pool.cpp semaphore.cpp thread_blocker.cpp
 
 clean:
 	rm address obj_str_iterator socket_agent thread_blocker semaphore *~ *.o
