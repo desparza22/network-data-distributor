@@ -43,29 +43,28 @@ public:
   void print_error_info(struct SocketReturn return_info);
 
   
-  struct SocketReturn agent_open_server(std::basic_string<char> IP,
-					std::basic_string<char> port,
+  struct SocketReturn agent_open_server(std::string IP,
+					std::string port,
 					int& set_to_descriptor,
 					int queue_size,
 					bool exit_on_error);
   struct SocketReturn agent_accept(int socket_descriptor,
 				   int& set_to_descriptor,
-				   bool exit_on_error);
-  
-  struct SocketReturn agent_connect(std::basic_string<char> IP,
-			      std::basic_string<char> port,
-			      int& socket_descriptor, bool exit_on_error);
-  struct SocketReturn agent_send(std::basic_string<char> message,
+				   bool exit_on_error);  
+  struct SocketReturn agent_connect(std::string IP,
+				    std::string port,
+				    int& socket_descriptor, bool exit_on_error);
+  struct SocketReturn agent_send(std::string message,
 				 int socket_descriptor,
 				 bool exit_on_error);
-  struct SocketReturn agent_receive(std::basic_string<char>& buffer,
+  struct SocketReturn agent_receive(std::string& buffer,
 				    int max_size,
 				    int socket_descriptor,
 				    bool exit_on_error);
   struct SocketReturn agent_close_connection(int socket_descriptor, bool exit_on_error);
 
-  struct SocketReturn call_getaddrinfo(std::basic_string<char> IP,
-				       std::basic_string<char> port,
+  struct SocketReturn call_getaddrinfo(std::string IP,
+				       std::string port,
 				       struct addrinfo& results,
 				       bool exit_on_error);
   struct SocketReturn call_socket(const struct addrinfo& results,

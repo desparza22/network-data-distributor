@@ -3,27 +3,28 @@
 
 #include <string>
 
+#include "address.hpp"
+
 class Communicator;
 struct Message;
 
 struct Message {
-  int descriptor;
+  std::shared_ptr<Address> address;
   std::string message;
 };
 
 class Communicator {
 
 public:
-  virtual void go_online(std::string address) = 0;
+  virtual void go_online(std::shared_ptr<Address> address) = 0;
   virtual void go_offline() = 0;
-  virtual void send_to(std::string address, std::string message) = 0;
+  virtual void send_to(std::shared_ptr<Address> address, std::string message) = 0;
   virtual Message poll_inbox() = 0;
 
-  virtual void close_connection(std::string address);
+  virtual void close_connection(std::shared_ptr<Address> address);
 };
 
-struct Message construct_message(int descriptor,
-				 std::string message_str,
-				 bool has_message);
+struct Message construct_message(std::shared_ptr<Address> address,
+				 std::string message_str);
 
 #endif

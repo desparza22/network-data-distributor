@@ -1,11 +1,11 @@
 #include "obj_str_iterator.hpp"
 
-ObjStrIterator::ObjStrIterator(std::basic_string<char> iterate_over) {
+ObjStrIterator::ObjStrIterator(std::string iterate_over) {
   remaining_to_iterate = iterate_over;
 }
 
-std::basic_string<char> ObjStrIterator::get_next() {
-  std::basic_string<char> next_obj_str;
+std::string ObjStrIterator::get_next() {
+  std::string next_obj_str;
 
   int next_separator = remaining_to_iterate.find(OBJECT_SEP);
   if(next_separator != std::string::npos) {
@@ -26,12 +26,12 @@ bool ObjStrIterator::has_next() {
   return remaining_to_iterate.size() != 0;
 }
 
-std::basic_string<char> ObjStrIterator::vector_to_string(std::vector<std::shared_ptr<Stringable>> stringables) {
-  std::basic_string<char> represent_vector;
+std::string ObjStrIterator::vector_to_string(std::vector<std::shared_ptr<Stringable>> stringables) {
+  std::string represent_vector;
   
   std::vector<std::shared_ptr<Stringable>>::iterator it;
   for(const auto stringable : stringables) {
-    std::basic_string<char> represent_object = stringable->as_string();
+    std::string represent_object = stringable->as_string();
     
     represent_vector.append(represent_object + OBJECT_SEP);
   }
@@ -43,21 +43,21 @@ std::basic_string<char> ObjStrIterator::vector_to_string(std::vector<std::shared
 
 class StringWrapper: public Stringable {
 private:
-  std::basic_string<char> original_string;
+  std::string original_string;
   
 public:
-  StringWrapper(std::basic_string<char> string);
+  StringWrapper(std::string string);
 
-  std::basic_string<char> as_string() const override;
+  std::string as_string() const override;
 
   bool operator<(const StringWrapper &other) const;
 };
 
-StringWrapper::StringWrapper(std::basic_string<char> string) {
+StringWrapper::StringWrapper(std::string string) {
   original_string = string;
 }
 
-std::basic_string<char> StringWrapper::as_string() const {
+std::string StringWrapper::as_string() const {
   return original_string;
 }
 
@@ -99,9 +99,9 @@ bool check_string_wrapper_equality(std::shared_ptr<Stringable> a,
 
 int main(int argc, char* argv[]) {
   //Make StringWrappers
-  std::basic_string<char> hello_str("hello\0");
-  std::basic_string<char> world_str("world\0");
-  std::basic_string<char> empty_str("\0");
+  std::string hello_str("hello\0");
+  std::string world_str("world\0");
+  std::string empty_str("\0");
   
   std::shared_ptr<StringWrapper> hello_wrapper(new StringWrapper(hello_str));
   std::shared_ptr<StringWrapper> world_wrapper(new StringWrapper(world_str));
@@ -132,10 +132,10 @@ int main(int argc, char* argv[]) {
   //a basic_string
   std::vector<std::shared_ptr<Stringable>> vector_b;
   
-  std::basic_string<char> represent_vector = ObjStrIterator::vector_to_string(vector_a);
+  std::string represent_vector = ObjStrIterator::vector_to_string(vector_a);
   ObjStrIterator iterator(represent_vector);
   while(iterator.has_next()) {
-    std::basic_string<char> string_wrapper_representation = iterator.get_next();
+    std::string string_wrapper_representation = iterator.get_next();
     vector_b.push_back(std::shared_ptr<Stringable>(new StringWrapper(string_wrapper_representation)));
   }
   //

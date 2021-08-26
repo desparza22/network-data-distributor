@@ -1,3 +1,7 @@
-implement call_close, open_server and accept
+add functions for stopping socket_communicator from receiving messages
 
-test socket_agent
+write test for socket_communicator (where multiple threads are sending random messages to each other,
+then checking that the received messages align with the sent ones. each thread can close its connection
+with another once it has sent its last message to that other node)
+
+implement email_communicator? or jump into implementing the protocol, whichever sounds more interesting

@@ -14,47 +14,40 @@ SocketCommunicator::SocketCommunicator() {
 //Check is_online() because SocketCommunicator cannot handle multiple
 //servers, information with online server needs to be handled when it is
 //finished with.
-void SocketCommunicator::go_online(std::string address_str) {
-  if(!is_online()) {
+void SocketCommunicator::go_online(std::shared_ptr<Address> address) {
+  if(!get_is_online()) {
     set_is_online(true);
-    do_go_online(address_str);
+    do_go_online(address);
   }
 }
 
 //The is_online variable is checked by the loop that accepts connections.
 void SocketCommunicator::go_offline() {
-  if(is_online()) {
+  if(get_is_online()) {
     set_is_online(false);
   }
 }
 
-//It is for now assumed that recipient descriptor is open.
-void SocketCommunicator::send_to(int recipient_descriptor,
+void SocketCommunicator::send_to(std::shared_ptr<Address> address,
 				 std::string message) {
-  if(!is_online()) {
-    std::cout << "SocketCommunicator is not online. Could not send \"" << message << "\" to \"" << recipient_descriptor << "\"\n";
+  if(!get_is_online()) {
+    std::cout <<
+      "SocketCommunicator is not online. Could not send \"" <<
+      message << "\"\n";
     
   } else if(message.size() > MAX_MESSAGE_SIZE) {
-    std::cout << "Message \"" << message << "\" being sent to \"" << recipient_descriptor << "\" is too long.\n";
+    std::cout << "Message \"" << message << "\" is too long.\n";
 
   } else {
-    do_send_to(recipient_descriptor, message);
+    do_send_to(address, message);
   }
-}
-
-//Checks if there is an open connection with the ip and port in
-//address_str, creating one if there is not, then sending the message.
-void SocketCommunicator::send_to(std::string address_str,
-				 std::string message) {
-  int recipient_descriptor = get_or_create_descriptor(address_str);
-  send_to(recipient_descriptor, message);
 }
 
 //The inbox "message_pool" is filled by other functions and simply
 //retrieved from in this function.
 struct Message SocketCommunicator::poll_inbox() {
   struct Message result;
-  if(is_online()) {
+  if(get_is_online()) {
     result = do_poll_inbox();
 
   } else {
@@ -67,33 +60,47 @@ struct Message SocketCommunicator::poll_inbox() {
 //For optimization reasons, this function may be called externally
 //instructing that any connection descriptor associated with address
 //be closed.
-void SocketCommunicator::close_connection(std::string address) {
+void SocketCommunicator::close_connection(std::shared_ptr<Address> address) {
   int descriptor = get_descriptor(address);
+
   if(descriptor != -1) {
     socket_agent.agent_close_connection(descriptor, EXIT_ON_ERROR);
-    address_to_descriptor.erase(address);
+
+    std::shared_ptr<SocketAddress> socket_address =
+	std::dynamic_pointer_cast<SocketAddress>(address);
+    if(!socket_address->get_is_descriptor()) {
+      std::string address_str = socket_address->as_string();
+      address_to_descriptor.erase(address_str);
+    }
   }
 }
 
 //Continuous accepting of connections and assignment of a thread
 //to receive messages from those connections.
 void SocketCommunicator::enter_accept_loop() {
-  while(is_online()) { //later this can be a mutable variable
+  while(get_is_online()) {
     int set_to_descriptor;
     socket_agent.agent_accept(local_descriptor,
 			      set_to_descriptor,
 			      EXIT_ON_ERROR);
 
+    std::shared_ptr<SocketAddress> socket_address(new SocketAddress(set_to_descriptor));
+    std::shared_ptr<Address> address =
+      std::dynamic_pointer_cast<Address>(socket_address);
     std::thread receiving_thread(call_enter_receive_loop,
 				 *this,
-				 set_to_descriptor);
+				 address);
   }
 }
 
 //Continuously receives messages from the connection at descriptor
 //while it is open. Adds those messages to the inbox "message_pool".
-void SocketCommunicator::enter_receive_loop(int descriptor) {
+void SocketCommunicator::enter_receive_loop(std::shared_ptr<Address> address) {
   bool connection_active = true;
+  std::shared_ptr<SocketAddress> socket_address =
+    std::dynamic_pointer_cast<SocketAddress>(address);
+  int descriptor = socket_address->get_descriptor();
+  
   while(true) {
     std::string receive_buffer;
     struct SocketReturn socket_return =
@@ -105,24 +112,25 @@ void SocketCommunicator::enter_receive_loop(int descriptor) {
     connection_active = socket_return.return_val != 0;
 
     if(connection_active) {
-      struct Message message = construct_message(descriptor, receive_buffer);
+      struct Message message = construct_message(address,
+						 receive_buffer);
       message_pool.add_object(message);
 
     } else {
       break;
     }
   }
+
+  close_connection(address);
 }
 
 //It is assumed that is_online was false and set to true immediately before
 //calling this.
-void SocketCommunicator::do_go_online(std::string address_str) {  
-  std::string ip;
-  std::string port;
-  
-  SocketAddress local_address(address_str);
-  ip = local_address.get_ip();
-  port = local_address.get_port();
+void SocketCommunicator::do_go_online(std::shared_ptr<Address> address) {
+  std::shared_ptr<SocketAddress> socket_address =
+    std::dynamic_pointer_cast<SocketAddress>(address);
+  std::string ip = socket_address->get_ip();
+  std::string port = socket_address->get_port();
   
   socket_agent.agent_open_server(ip,
 				 port,
@@ -136,9 +144,11 @@ void SocketCommunicator::do_go_online(std::string address_str) {
 
 //It is assumed that is_online is true and, for now, that recipient_descriptor
 //is open.
-void SocketCommunicator::do_send_to(int recipient_descriptor,
+void SocketCommunicator::do_send_to(std::shared_ptr<Address> address,
 				    std::string message) {
-  socket_agent.agent_send(message, recipient_descriptor, EXIT_ON_ERROR);
+  int descriptor = get_or_create_descriptor(address);
+  
+  socket_agent.agent_send(message, descriptor, EXIT_ON_ERROR);
 }
 
 //It is assumed that is_online is true.
@@ -149,35 +159,63 @@ struct Message SocketCommunicator::do_poll_inbox() {
   return received;
 }
 
-int SocketCommunicator::get_or_create_descriptor(std::string address_str) {
-  int descriptor = get_descriptor(address_str);
+int SocketCommunicator::get_or_create_descriptor(std::shared_ptr<Address> address) {
+  int descriptor = get_descriptor(address);
   
   if(descriptor == -1) {
-    SocketAddress address(address_str);
-    std::string ip = address.get_ip();
-    std::string port = address.get_port();
-    socket_agent.agent_connect(ip, port, descriptor, EXIT_ON_ERROR);
+    std::shared_ptr<SocketAddress> socket_address =
+      std::dynamic_pointer_cast<SocketAddress>(address);
+    std::string ip = socket_address->get_ip();
+    std::string port = socket_address->get_port();
 
+    socket_agent.agent_connect(ip, port, descriptor, EXIT_ON_ERROR);
     address_to_descriptor[address_str] = descriptor;
   }
 
   return descriptor;
 }
 
-int SocketCommunicator::get_descriptor(std::string address_str) {
+int SocketCommunicator::get_descriptor(std::shared_ptr<Address> address) {
   int descriptor = -1;
-  if(address_to_descriptor.contains(address_str)) {
-    descriptor = address_to_descriptor[address_str];
+  std::shared_ptr<SocketAddress> socket_address =
+    std::dynamic_pointer_cast<SocketAddress>(address);
+  
+  if(socket_address->get_is_descriptor()) {
+    descriptor = socket_address->get_descriptor();
+    
+  } else {
+    std::string address_str = socket_address->as_string();
+    if(address_to_descriptor.contains(address_str)) {
+      descriptor = address_to_descriptor[address_str];
+    }
   }
 
   return descriptor;
 }
 
+void SocketCommunicator::set_is_online(bool is_online) {
+  is_online_access.acquire(1);
+  this->is_online = is_online;
+  is_online_access.give(1);
+}
+
+bool SocketCommunicator::get_is_online() {
+  is_online_access.acquire(1);
+  bool result = is_online;
+  is_online_access.give(1);
+
+  return result;
+}
+/*
+std::string SocketCommunicator::generate_dummy_address() {
+  return "no_address_" + dummy_addresses_generated++;
+}*/
+
 //Faciliates creating a thread on enter_receive_loop, which is otherwise
 //not possible because it is a member function
 void call_enter_receive_loop(SocketCommunicator socket_communicator,
-			     int descriptor) {
-  socket_communicator.enter_receive_loop(descriptor);
+			     std::shared_ptr<Address> address) {
+  socket_communicator.enter_receive_loop(address);
 }
 
 void call_enter_accept_loop(SocketCommunicator socket_communicator) {
@@ -203,18 +241,43 @@ void increment_counter() {
   counter_access.give(1);
 }
 
-bool SocketCommunicator::is_online() {
-  is_online_access.acquire(1);
-  bool result = is_online;
-  is_online_access.give(1);
+struct MessageHasher {
 
-  return result;
-}
+  std::size_t operator()(const Message& message) {
+    std::size_t address_hash = hash_address(message.address);
+    std::size_t message_hash = hash_message(message.message);
+
+    return address_hash ^ (message_hash << 1);
+  }
+
+  std::size_t hash_message(std::string message) {
+    return std::hash<std::string>()(message);
+  }
+
+  std::size_t hash_address(std::shared_ptr<Address> address) {
+    std::shared_ptr<SocketAddress> socket_address =
+      std::dynamic_pointer_cast<SocketAddress>(address);
+    std::size_t address_hash;
+    if(socket_address->get_is_descriptor()) {
+      address_hash = std::hash<int>()(socket_address->get_descriptor());
+
+    } else {
+      std::size_t ip_hash =
+	std::hash<std::string>()(socket_address->get_ip());
+      std::size_t port_hash =
+	std::hash<std::string>()(socket_address->get_port());
+      address_hash = (ip_hash ^ (port_hash << 1)) >> 1;
+    }
+
+    return address_hash;
+  }
+
+};
 
 
 int main(int argc, char* argv[]) {
-  std::unordered_map<std::string, struct TestingMessageInfo> delivered;
-  std::unordered_map<std::string, struct TestingMessageInfo> received;
+  std::unordered_map<struct Message, struct TestingMessageInfo, MessageHasher> delivered;
+  std::unordered_map<struct Message, struct TestingMessageInfo, MessageHasher> received;
 
   
 

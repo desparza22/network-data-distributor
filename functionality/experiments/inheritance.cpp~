@@ -1,0 +1,25 @@
+
+#include <iostream>
+
+class Base {
+
+public:
+  virtual void printer() = 0;
+
+};
+
+class DerivedOne : public Base {
+
+private:
+  void printer();
+
+};
+
+void DerivedOne::printer() {
+  std::cout << "print\n";
+}
+
+int main(int argc, char* argv[]) {
+  DerivedOne derived_one;
+  derived_one.printer();
+}

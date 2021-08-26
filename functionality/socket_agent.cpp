@@ -58,8 +58,8 @@ void SocketAgent::print_error_info(struct SocketReturn return_info) {
   }
 }
 
-struct SocketReturn SocketAgent::agent_open_server(std::basic_string<char> IP,
-						   std::basic_string<char> port,
+struct SocketReturn SocketAgent::agent_open_server(std::string IP,
+						   std::string port,
 						   int& set_to_descriptor,
 						   int queue_size,
 						   bool exit_on_error) {
@@ -105,8 +105,8 @@ struct SocketReturn SocketAgent::agent_accept(int socket_descriptor,
   return return_info;
 }
 
-struct SocketReturn SocketAgent::agent_connect(std::basic_string<char> IP,
-			   std::basic_string<char> port,
+struct SocketReturn SocketAgent::agent_connect(std::string IP,
+			   std::string port,
 			   int& socket_descriptor, bool exit_on_error) {
   struct SocketReturn return_info;
   memset(&return_info, 0, sizeof(return_info));
@@ -131,7 +131,7 @@ struct SocketReturn SocketAgent::agent_connect(std::basic_string<char> IP,
   return return_info;
 }
 
-struct SocketReturn SocketAgent::agent_send(std::basic_string<char> message,
+struct SocketReturn SocketAgent::agent_send(std::string message,
 					    int socket_descriptor,
 					    bool exit_on_error) {
   struct SocketReturn return_info;
@@ -160,7 +160,7 @@ struct SocketReturn SocketAgent::agent_send(std::basic_string<char> message,
   return return_info;
 }
 
-struct SocketReturn SocketAgent::agent_receive(std::basic_string<char>& buffer, int max_bytes,
+struct SocketReturn SocketAgent::agent_receive(std::string& buffer, int max_bytes,
 					 int socket_descriptor, bool exit_on_error) {
   struct SocketReturn return_info;
   memset(&return_info, 0, sizeof(return_info));
@@ -174,7 +174,7 @@ struct SocketReturn SocketAgent::agent_receive(std::basic_string<char>& buffer, 
   } else {
     int recv_ret = return_info.return_val;
     receivable_buffer[recv_ret] = '\0';
-    buffer = std::basic_string<char>(&receivable_buffer[0]);
+    buffer = std::string(&receivable_buffer[0]);
   }
   
   return return_info;
@@ -186,8 +186,8 @@ struct SocketReturn SocketAgent::agent_close_connection(int socket_descriptor, b
   return return_info;
 }
 
-struct SocketReturn SocketAgent::call_getaddrinfo(std::basic_string<char> IP,
-						  std::basic_string<char> port,
+struct SocketReturn SocketAgent::call_getaddrinfo(std::string IP,
+						  std::string port,
 						  struct addrinfo& results,
 						  bool exit_on_error) {
   struct SocketReturn return_info;
@@ -370,18 +370,16 @@ struct SocketReturn SocketAgent::call_recv(int socket_descriptor,
   memset(&return_info, 0, sizeof(return_info));
   
   int recv_ret = recv(socket_descriptor, buffer, max_bytes, 0);
+  return_info.return_val = recv_ret;
+  
   if(recv_ret == -1) {
     return_info.flags = RECV_ERROR;
-    return_info.return_val = recv_ret;
     return_info.error = errno;
 
     if(exit_on_error) {
       print_error_info(return_info);
       exit(1);
-    }
-    
-  } else {
-    return_info.return_val = recv_ret;
+    } 
   }
 
   return return_info;
@@ -413,22 +411,22 @@ struct SocketReturn SocketAgent::call_close(int socket_descriptor,
 #include <vector>
 
 void send_receive(int thread_number,
-		  std::vector<std::basic_string<char>> ips,
-		  std::vector<std::basic_string<char>> ports,
+		  std::vector<std::string> ips,
+		  std::vector<std::string> ports,
 		  Semaphore coordinate_this,
 		  Semaphore coordinate_main,
 		  std::shared_ptr<bool> success);
 
-void connect_send(std::basic_string<char> other_ip,
-		  std::basic_string<char> other_port,
-		  std::basic_string<char> message);
+void connect_send(std::string other_ip,
+		  std::string other_port,
+		  std::string message);
 
 void listen_accept_receive(int socket_descriptor,
-			   std::basic_string<char>& buffer);
+			   std::string& buffer);
 
 void send_receive(int thread_number,
-		  std::vector<std::basic_string<char>> ips,
-		  std::vector<std::basic_string<char>> ports,
+		  std::vector<std::string> ips,
+		  std::vector<std::string> ports,
 		  Semaphore coordinate_this,
 		  Semaphore coordinate_main,
 		  std::shared_ptr<bool> success) {
@@ -441,8 +439,8 @@ void send_receive(int thread_number,
   int queue_size = num_other_threads;
   bool exit_on_error = true;
   int socket_descriptor;
-  std::basic_string<char> ip = ips[thread_number];
-  std::basic_string<char> port = ports[thread_number];
+  std::string ip = ips[thread_number];
+  std::string port = ports[thread_number];
   socket_return = socket_agent.agent_open_server(ip,
 						 port,
 						 socket_descriptor,
@@ -458,15 +456,15 @@ void send_receive(int thread_number,
       continue;
     }
     
-    std::basic_string<char> other_ip = ips[i];
-    std::basic_string<char> other_port = ports[i];
-    std::basic_string<char> message_to_send = std::to_string(i);
+    std::string other_ip = ips[i];
+    std::string other_port = ports[i];
+    std::string message_to_send = std::to_string(i);
     std::thread sender(connect_send, other_ip, other_port, message_to_send);
     senders.push_back(std::move(sender));
   }
 
-  std::basic_string<char> received;
-  std::basic_string<char> expecting = std::to_string(thread_number);
+  std::string received;
+  std::string expecting = std::to_string(thread_number);
 
   *success = true;
   for(int i = 0; i < num_other_threads; i++) {
@@ -486,9 +484,9 @@ void send_receive(int thread_number,
 						      exit_on_error);
 }
 
-void connect_send(std::basic_string<char> other_ip,
-		  std::basic_string<char> other_port,
-		  std::basic_string<char> message) {
+void connect_send(std::string other_ip,
+		  std::string other_port,
+		  std::string message) {
   SocketAgent socket_agent;
   struct SocketReturn socket_return;
   int socket_descriptor;
@@ -507,7 +505,7 @@ void connect_send(std::basic_string<char> other_ip,
 }
 
 void listen_accept_receive(int socket_descriptor,
-			   std::basic_string<char>& buffer) {
+			   std::string& buffer) {
   SocketAgent socket_agent;
   struct SocketReturn socket_return;
   
@@ -526,19 +524,20 @@ void listen_accept_receive(int socket_descriptor,
 
 
 int main(int argc, char* argv[]) {
-
   //n threads opening servers and sending messages
   int num_threads = 30;
 
-  std::vector<std::basic_string<char>> ips(num_threads,
-					   std::basic_string<char>("127.0.0.1"));
-  std::vector<std::basic_string<char>> ports;
+  std::vector<std::string> ips(num_threads,
+			       std::string("127.0.0.1", 9));
+  std::vector<std::string> ports;
   int start_port = 2000;
   for(int port = start_port; port < start_port + num_threads; port++) {
-    std::basic_string<char> port_string = std::to_string(port);
+    std::string port_string = std::to_string(port);
     ports.push_back(port_string);
   }
-  
+
+  //used to coordinate dependencies, such as thread A being open
+  //before thread B attempts to connect to thread A
   Semaphore coordinate_threads;
   Semaphore coordinate_main;  
 

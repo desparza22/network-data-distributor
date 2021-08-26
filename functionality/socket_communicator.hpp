@@ -6,7 +6,9 @@
 #include "object_pool.hpp"
 #include "semaphore.hpp"
 #include "address.hpp"
+#include "socket_address.hpp"
 
+#include <memory>
 #include <thread>
 #include <string>
 #include <unordered_map>
@@ -20,40 +22,37 @@ class SocketCommunicator;
 class SocketCommunicator : public Communicator {
 private:
   ObjectPool<struct Message> message_pool;
-  TwoWayMap<std::string, int> address_to_descriptor;
-  std::unordered_map<std::string, int> server_address_to_descriptor;
-  std::unordered_map<int, std::string> 
   SocketAgent socket_agent;
 
   bool is_online = false;
   Semaphore is_online_access = Semaphore(1);
   int local_descriptor = -1;
 
-  void do_go_online(std::string address_str);
-  void do_send_to(int recipient_descriptor, std::string message);
+  void do_go_online(std::shared_ptr<Address> address);
+  void do_send_to(std::shared_ptr<Address> address, std::string message);
   struct Message do_poll_inbox();
 
-  int get_or_create_descriptor(std::string address_str);
-  int get_descriptor(std::string address_str);
+  int get_or_create_descriptor(std::shared_ptr<Address> address);
+  int get_descriptor(std::shared_ptr<Address> address);
 
-  bool is_online();
+  void set_is_online(bool is_online);
+  bool get_is_online();
   
 public:
   SocketCommunicator();
   
-  void go_online(std::string address_str) override;
+  void go_online(std::shared_ptr<Address> address) override;
   void go_offline() override;
-  void send_to(std::string address_str, std::string message) override;
+  void send_to(std::shared_ptr<Address> address,
+	       std::string message) override;
   struct Message poll_inbox() override;
-  void close_connection(std::string address) override;
-
-  void send_to(int recipient_descriptor, std::string message);
+  void close_connection(std::shared_ptr<Address> address) override;
 
   //enter_accept_loop and enter_receive_loop are  public so that they
   //can be called by the helper function. they should not be called by
   //other classes
   void enter_accept_loop();
-  void enter_receive_loop(int descriptor);
+  void enter_receive_loop(std::shared_ptr<Address> address);
 };
 
 void call_enter_accept_loop(SocketCommunicator socket_communicator);

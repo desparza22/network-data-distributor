@@ -12,15 +12,15 @@
 
 class ObjStrIterator {
 private:
-  std::basic_string<char> remaining_to_iterate;
+  std::string remaining_to_iterate;
   
 public:
-  ObjStrIterator(std::basic_string<char> iterate_over);
+  ObjStrIterator(std::string iterate_over);
 
-  std::basic_string<char> get_next();
+  std::string get_next();
   bool has_next();
 
-  static std::basic_string<char> vector_to_string(std::vector<std::shared_ptr<Stringable>> stringables);
+  static std::string vector_to_string(std::vector<std::shared_ptr<Stringable>> stringables);
 };
 
 #endif

@@ -5,7 +5,7 @@
 
 class Stringable {
 public:
-  virtual std::basic_string<char> as_string() const = 0;
+  virtual std::string as_string() const = 0;
 };
 
 #endif
