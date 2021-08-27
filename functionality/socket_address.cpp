@@ -45,26 +45,14 @@ void SocketAddress::initialize_SocketAddress(std::string ip, std::string port, i
 }
 
 std::string SocketAddress::get_ip() const {
-  if(!has_ip_port()) {
-    access_error("ip");
-  }
-  
   return ip;
 }
 
 std::string SocketAddress::get_port() const {
-  if(!has_ip_port()) {
-    access_error("port");
-  }
-  
   return port;
 }
 
 int SocketAddress::get_descriptor() const {
-  if(!has_descriptor()) {
-    access_error("descriptor");
-  }
-
   return descriptor;
 }
 
@@ -88,10 +76,10 @@ void SocketAddress::set_descriptor(int descriptor) {
   this->descriptor = descriptor;
 }
 
-void SocketAddress::access_error(const std::string accessing) const {
+/*void SocketAddress::access_error(const std::string accessing) const {
   std::cerr << "Error: accessing " << accessing << " but this SocketAddress does not have " << accessing << std::endl;
   exit(1);
-}
+}*/
 
 bool SocketAddress::operator<(const SocketAddress &other) const {
   int comparison = 0;
@@ -150,19 +138,9 @@ std::string SocketAddress::as_string() const {
   std::string port_str;
   std::string descriptor_str;
 
-  if(has_ip_port()) {
-    ip_str = get_ip();
-    port_str = get_port();
-  } else {
-    ip_str = NO_IP_PORT;
-    port_str = NO_IP_PORT;
-  }
-
-  if(has_descriptor()) {
-    descriptor_str = std::to_string(get_descriptor());
-  } else {
-    descriptor_str = std::to_string(NO_DESCRIPTOR);
-  }
+  ip_str = get_ip();
+  port_str = get_port();
+  descriptor_str = std::to_string(get_descriptor());
   
   std::string represent_address = ip_str + FIELD_SEP + port_str + FIELD_SEP + descriptor_str;
   

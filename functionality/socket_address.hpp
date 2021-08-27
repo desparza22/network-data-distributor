@@ -18,7 +18,6 @@ class SocketAddress;
 class SocketAddress: public Stringable, public Address {
 private:
   bool has_ip_port_indicator;
-  bool has_descriptor_indicator;
 
   std::string ip;
   std::string port;
@@ -44,7 +43,7 @@ public:
   void set_ip(std::string ip);
   void set_port(std::string port);
   void set_descriptor(int descriptor);
-  void access_error(const std::string accessing) const;
+  //  void access_error(const std::string accessing) const;
 
   bool operator<(const SocketAddress &other) const;
   int compare_indicators(const SocketAddress &other) const;
